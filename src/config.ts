@@ -23,5 +23,5 @@ export enum Commands {
 // Colour palette for bot messages /////////////////////////////////////////////
 export enum Palette {
   Brand = '#CA4072',
-  Confidential = '#00CCFF'
+  Confidential = '#000000'
 };

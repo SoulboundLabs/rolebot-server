@@ -9,6 +9,6 @@
   },
   "config": {
     "title": "Your server's Rolebot configuration",
-    "description": "[ CONFIG GOES HERE ]"
+    "description": "```$CONFIG```"
   }
 }

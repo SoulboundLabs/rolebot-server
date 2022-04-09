@@ -9,6 +9,12 @@ import Discord, {
 } from "discord.js";
 import Messages from "./messages.json";
 
+interface ServerSettings {
+  protocol: string;
+  networks: Array<string>;
+  roles: Array<string>;
+}
+
 export default class Rolebot {
 
   client: Client;
@@ -39,7 +45,11 @@ export default class Rolebot {
     const CMD = message.content.slice(1);
     switch (CMD) {
       case Commands.ShowUserRoles:
-        this.sendVerificationLink(message.author);
+        if (false) { // TODO Query the db to find the user's verified roles ////
+          // TODO Display all verified roles ///////////////////////////////////
+        } else {
+          this.sendVerificationLink(message.author);
+        }
         break;
       case Commands.UnlinkWallet:
         // TODO Implement function to wipe a user's data (on this server?) /////
@@ -75,23 +85,34 @@ export default class Rolebot {
   }
   // FN:SEND_SERVER_CONFIG ////////////////////////////////////////////////////
   sendServerConfig( user: User ) {
+    const SETTINGS = JSON.stringify(this.retrieveServerSettings(), null, 2);
     this.sendPrivateMessage(
       user, 
       Messages.config.title, 
-      Messages.config.description, 
+      Messages.config.description.replace(/\$CONFIG/ig, SETTINGS), 
       Palette.Confidential
     );
   }
   // FN:SEND_MOCK_WELCOME_MESSAGE //////////////////////////////////////////////
   sendMockWelcomeMessage( user: User ) {
-    const T = Messages.welcome.title.replace('$PROTOCOL', 'The Graph');
-    const D = Messages.welcome.description.replace(/\$PROTOCOL/ig, 'The Graph');
+    const S = this.retrieveServerSettings();
+    const T = Messages.welcome.title.replace('$PROTOCOL', S.protocol);
+    const D = Messages.welcome.description.replace(/\$PROTOCOL/ig, S.protocol);
     this.sendPrivateMessage(user, T, D);
   }
   // FN:POST_WELCOME_MESSAGE ///////////////////////////////////////////////////
   postWelcomeMessage() {
     // TODO See if we can determine the guild's 'general' channel //////////////
     // TODO Post the message publicly in 'general' /////////////////////////////
+  }
+  // FN:RETRIEVE_SERVER_SETTINGS ///////////////////////////////////////////////
+  retrieveServerSettings( id?: string ): ServerSettings {
+    // TODO Make this function retrieve the actual settings ////////////////////
+    return {
+      protocol: "The Graph",
+      networks: ["Subgraph 1", "Subgraph 2"],
+      roles: ["Delegator", "Indexer", "Curator", "Subgraph Dev"]
+    };
   }
   //////////////////////////////////////////////////////////////////////////////
 

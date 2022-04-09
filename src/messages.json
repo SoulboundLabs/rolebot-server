@@ -1,0 +1,14 @@
+{
+  "welcome": {
+    "title": "Hello! I’m Rolebot, a Discord bot that you can use access roles on this server by verrifying your activity on $PROTOCOL",
+    "description": "In order to become an **Indexer**, **Delegator**, or **Curator** in Discord you must use the command `.whoami`\n\nThis will then bring you to EmblemDAO where you can link your $PROTOCOL wallet to the to Emblem and claim badges that represent your activity on the $PROTOCOL.\n\nIf you’ve earned the approriate badges then you will automatically be added to the apropriate role. If you want to learn more about how the roles are defined you can check it out [here](https://rolebot.emblemdao.com/help/roles).\n\nIf you have questions just use  `.help`"
+  },
+  "unverified": {
+    "title": "Roleless are we?",
+    "description": "Prithee, head to [$URL]($URL) to receive recognition for your on-chain efforts."
+  },
+  "config": {
+    "title": "Your server's Rolebot configuration",
+    "description": "[ CONFIG GOES HERE ]"
+  }
+}

@@ -1,9 +1,13 @@
-import { ClientOptions } from "discord.js";
+import { ClientOptions, Intents } from "discord.js";
 
 // Configuration options for Discord bot permissions ///////////////////////////
 export const CLIENT_OPTIONS: ClientOptions = { 
-  intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"], 
-  partials: ['MESSAGE', 'CHANNEL', 'GUILD_MEMBER'] 
+  intents: [
+    Intents.FLAGS.GUILDS, 
+    Intents.FLAGS.GUILD_MESSAGES, 
+    Intents.FLAGS.DIRECT_MESSAGES
+  ], 
+  partials: ["MESSAGE", 'CHANNEL', 'GUILD_MEMBER'] 
 };
 
 // Where to send users to connect their wallet + Discord account ///////////////

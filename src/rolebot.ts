@@ -4,6 +4,8 @@ import Discord, {
   Client, 
   ColorResolvable, 
   Message, 
+  MessageActionRow,
+  MessageButton,
   MessageEmbed, 
   User 
 } from "discord.js";
@@ -81,7 +83,15 @@ export default class Rolebot {
   sendVerificationLink( user: User ) {
     const URL = VERIFY_URL + '' // Any params? E.g. Server / user ID? //////////
     const DESC = Messages.unverified.description.replace(/\$URL/ig, URL);
-    this.sendPrivateMessage(user, Messages.unverified.title, DESC);
+    const EMBED = new MessageEmbed();
+    EMBED.setTitle(Messages.unverified.title);
+    EMBED.setDescription(DESC);
+    const ROW = new MessageActionRow().addComponents(
+      new MessageButton().setURL(URL)
+                         .setLabel("Get verified")
+                         .setStyle("LINK")
+    );
+    user.send({ embeds: [EMBED], components: [ROW] });
   }
   // FN:SEND_SERVER_CONFIG ////////////////////////////////////////////////////
   sendServerConfig( user: User ) {

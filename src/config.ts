@@ -11,7 +11,8 @@ export const CLIENT_OPTIONS: ClientOptions = {
 };
 
 // Where to send users to connect their wallet + Discord account ///////////////
-export const VERIFY_URL = 'https://rolebot.emblemdao.com/verify/';
+export const CLIENT_URL = process.env.CLIENT_URL || 'https://localhost:3000';
+export const VERIFY_URL = process.env.VERIFY_URL || "!MISSING OAUTH URL!";
 
 // Prefix for commands, e.g. '.' in '.whoami' //////////////////////////////////
 export const CMD_PREFIX = '.';

@@ -1,8 +1,9 @@
-import { CLIENT_OPTIONS, VERIFY_URL, CMD_PREFIX } from "./config";
+import { CLIENT_OPTIONS, CLIENT_URL, VERIFY_URL, CMD_PREFIX } from "./config";
 import { Commands, Palette } from "./config";
 import Discord, { 
   Client, 
   ColorResolvable, 
+  Guild, 
   Message, 
   MessageActionRow,
   MessageButton,
@@ -12,6 +13,7 @@ import Discord, {
 import Messages from "./messages.json";
 
 interface ServerSettings {
+  enabled: boolean,
   protocol: string;
   networks: Array<string>;
   roles: Array<string>;
@@ -31,6 +33,7 @@ export default class Rolebot {
   // FN:REGISTER_EVENT_HANDLERS ////////////////////////////////////////////////
   registerEventHandlers() {
     this.client.on('ready', this.onReady.bind(this));
+    this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessageCreate.bind(this));
   }
   //////////////////////////////////////////////////////////////////////////////
@@ -38,7 +41,13 @@ export default class Rolebot {
   // EVENTS ////////////////////////////////////////////////////////////////////
   // ON:READY //////////////////////////////////////////////////////////////////
   onReady() {
-    console.log("// 🤖 Rolebot operational //");
+    console.log("// 🤖 operational //");
+  }
+  // ON:GUILD_CREATE ///////////////////////////////////////////////////////////
+  // Fires whenever the bot joins a new server /////////////////////////////////
+  async onGuildCreate( guild: Guild ) {
+    console.log(`// 🤖 joined ${guild.name} (${guild.id}) //`);
+    // TODO Push a new, disabled ServerSettings entry to the DB ////////////////
   }
   // ON:MESSAGE_CREATE /////////////////////////////////////////////////////////
   async onMessageCreate( message: Message ) {
@@ -65,7 +74,7 @@ export default class Rolebot {
         this.sendMockWelcomeMessage(message.author);
         break;
       default:
-        console.log("// 🤖 Unknown command encountered //");
+        console.log("// 🤖 encountered unknown command //");
     }
   }
   //////////////////////////////////////////////////////////////////////////////
@@ -81,13 +90,15 @@ export default class Rolebot {
   }
   // FN:SEND_VERIFICATION_LINK /////////////////////////////////////////////////
   sendVerificationLink( user: User ) {
-    const URL = VERIFY_URL + '' // Any params? E.g. Server / user ID? //////////
-    const DESC = Messages.unverified.description.replace(/\$URL/ig, URL);
+    const CURL = CLIENT_URL + '' // Any params? E.g. Server / user ID? /////////
+    const VURL = VERIFY_URL;
+
+    const DESC = Messages.unverified.description.replace(/\$URL/ig, CURL);
     const EMBED = new MessageEmbed();
     EMBED.setTitle(Messages.unverified.title);
     EMBED.setDescription(DESC);
     const ROW = new MessageActionRow().addComponents(
-      new MessageButton().setURL(URL)
+      new MessageButton().setURL(VURL)
                          .setLabel("Get verified")
                          .setStyle("LINK")
     );
@@ -119,6 +130,7 @@ export default class Rolebot {
   retrieveServerSettings( id?: string ): ServerSettings {
     // TODO Make this function retrieve the actual settings ////////////////////
     return {
+      enabled: true,
       protocol: "The Graph",
       networks: ["Subgraph 1", "Subgraph 2"],
       roles: ["Delegator", "Indexer", "Curator", "Subgraph Dev"]

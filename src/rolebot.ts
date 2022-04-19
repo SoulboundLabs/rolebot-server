@@ -12,6 +12,7 @@ import Discord, {
 } from "discord.js";
 import Messages from "./messages.json";
 import Store from "./store";
+import { QuerySnapshot } from "firebase-admin/firestore";
 
 interface ServerSettings {
   enabled: boolean,
@@ -20,15 +21,23 @@ interface ServerSettings {
   roles: Array<string>;
 }
 
+interface VerifiedUser {
+  wallets: Array<string>,
+  discordID: string,
+  deleteMe: boolean
+}
+
 export default class Rolebot {
 
+  operational: boolean = false;
+  
   client: Client;
   store: Store;
 
   constructor( token: string ) {
+    this.store = new Store();
     this.client = new Discord.Client(CLIENT_OPTIONS);
     this.registerEventHandlers();
-    this.store = new Store();
     this.client.login(token);
   }
 
@@ -38,14 +47,17 @@ export default class Rolebot {
     this.client.on('ready', this.onReady.bind(this));
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessageCreate.bind(this));
+    this.store.onCollectionUpdate('addresses', this.onWalletsUpdated.bind(this));
+    this.store.onCollectionUpdate('configurations', this.onConfigsUpdated.bind(this));
   }
   //////////////////////////////////////////////////////////////////////////////
 
   // EVENTS ////////////////////////////////////////////////////////////////////
   // ON:READY //////////////////////////////////////////////////////////////////
   onReady() {
+    this.operational = true;
     console.log("// 🤖 operational //");
-    this.store.getVerifiedAccounts();
+    // this.store.getVerifiedAccounts();
   }
   // ON:GUILD_CREATE ///////////////////////////////////////////////////////////
   // Fires whenever the bot joins a new server /////////////////////////////////
@@ -81,9 +93,35 @@ export default class Rolebot {
         console.log("// 🤖 encountered unknown command //");
     }
   }
+  // ON:WALLETS_UPDATED ////////////////////////////////////////////////////////
+  onWalletsUpdated( snapshot: QuerySnapshot<FirebaseFirestore.DocumentData> ) {
+    if (!this.operational) return; // Make sure this doesn't fire on start up //
+    snapshot.docChanges().forEach(( change ) => {
+      if (change.type === 'added' && change.doc.data().signature) {
+        console.log(`👋 ${change.doc.id} <> ${change.doc.data().discordID}`);
+      }
+      // TODO Reverse mapping to Discord User < Wallet(s) //////////////////////
+    });
+  }
+  // ON:CONFIGS_UPDATED ////////////////////////////////////////////////////////
+  onConfigsUpdated( snapshot: QuerySnapshot<FirebaseFirestore.DocumentData> ) {
+    if (!this.operational) return; // Make sure this doesn't fire on start up //
+    console.log(`// ${snapshot.size} server configuration added / changed`);
+  }
   //////////////////////////////////////////////////////////////////////////////
-
+  
   // FUNC //////////////////////////////////////////////////////////////////////
+  // FN:UPDATE_ROLES ///////////////////////////////////////////////////////////
+  updateRoles( users:Array<VerifiedUser> ) {
+    // TODO Look up which of Rolebot's guilds the user is active in //////////// 
+    // TODO Retrieve configs for the relevant guilds ///////////////////////////
+    // TODO Query Subgraph to retrieve all relevant badges /////////////////////
+    // TODO Determine highest roles across wallets for every user //////////////
+    // TODO Iterate over users and assign roles according to server config /////
+    // TODO Remove roles that are no longer relevant ///////////////////////////
+    // TODO Delete Addresses from DB where users indicated to do so ////////////
+    // MAYBEDO Publish promotion either publicly or via DM /////////////////////
+  }
   // FN:SEND_PRIVATE_MESSAGE ///////////////////////////////////////////////////
   sendPrivateMessage( to: User, title = "", desc = "", color?: Palette ) {
     const MSG = new MessageEmbed();

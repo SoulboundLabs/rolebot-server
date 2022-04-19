@@ -30,3 +30,6 @@ export enum Palette {
   Brand = '#CA4072',
   Confidential = '#000000'
 };
+
+// Google Firestore config /////////////////////////////////////////////////////
+export const GOOGLE_CERT_JSON = __dirname + "/rolebot-45f4c-92dabed858fc.json";

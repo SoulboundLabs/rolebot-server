@@ -11,6 +11,7 @@ import Discord, {
   User 
 } from "discord.js";
 import Messages from "./messages.json";
+import Store from "./store";
 
 interface ServerSettings {
   enabled: boolean,
@@ -22,10 +23,12 @@ interface ServerSettings {
 export default class Rolebot {
 
   client: Client;
+  store: Store;
 
   constructor( token: string ) {
     this.client = new Discord.Client(CLIENT_OPTIONS);
     this.registerEventHandlers();
+    this.store = new Store();
     this.client.login(token);
   }
 
@@ -42,6 +45,7 @@ export default class Rolebot {
   // ON:READY //////////////////////////////////////////////////////////////////
   onReady() {
     console.log("// 🤖 operational //");
+    this.store.getVerifiedAccounts();
   }
   // ON:GUILD_CREATE ///////////////////////////////////////////////////////////
   // Fires whenever the bot joins a new server /////////////////////////////////

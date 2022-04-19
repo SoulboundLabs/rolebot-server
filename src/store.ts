@@ -27,7 +27,7 @@ export default class Store {
     return snapshot;
   }
 
-  onCollectionUpdate( collection: string, callback: (snapshot: QuerySnapshot<FirebaseFirestore.DocumentData>) => void ) {
+  onUpdate( collection: string, callback: (snapshot: QuerySnapshot<FirebaseFirestore.DocumentData>) => void ) {
     const QUERY = this.db.collection(collection);  
     QUERY.onSnapshot(callback);
   }

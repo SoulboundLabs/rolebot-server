@@ -47,8 +47,8 @@ export default class Rolebot {
     this.client.on('ready', this.onReady.bind(this));
     this.client.on("guildCreate", this.onGuildCreate.bind(this));
     this.client.on("messageCreate", this.onMessageCreate.bind(this));
-    this.store.onCollectionUpdate('addresses', this.onWalletsUpdated.bind(this));
-    this.store.onCollectionUpdate('configurations', this.onConfigsUpdated.bind(this));
+    this.store.onUpdate('addresses', this.onWalletsUpdated.bind(this));
+    this.store.onUpdate('configurations', this.onConfigsUpdated.bind(this));
   }
   //////////////////////////////////////////////////////////////////////////////
 
@@ -96,23 +96,32 @@ export default class Rolebot {
   // ON:WALLETS_UPDATED ////////////////////////////////////////////////////////
   onWalletsUpdated( snapshot: QuerySnapshot<FirebaseFirestore.DocumentData> ) {
     if (!this.operational) return; // Make sure this doesn't fire on start up //
+    let verifiedUsers = [] as Array<VerifiedUser>;
     snapshot.docChanges().forEach(( change ) => {
       if (change.type === 'added' && change.doc.data().signature) {
         console.log(`👋 ${change.doc.id} <> ${change.doc.data().discordID}`);
+        // TODO Query additional user wallets ////////////////////////////////////
+        const USER = {
+          wallets: [change.doc.id],
+          discordID: change.doc.data().discordID,
+          deleteMe: false
+        };
+        verifiedUsers.push(USER);
       }
-      // TODO Reverse mapping to Discord User < Wallet(s) //////////////////////
     });
+    if(verifiedUsers.length > 0) this.updateRoles(verifiedUsers);
   }
   // ON:CONFIGS_UPDATED ////////////////////////////////////////////////////////
   onConfigsUpdated( snapshot: QuerySnapshot<FirebaseFirestore.DocumentData> ) {
     if (!this.operational) return; // Make sure this doesn't fire on start up //
-    console.log(`// ${snapshot.size} server configuration added / changed`);
+    console.log(`// ${snapshot.size} server configuration updated //`);
   }
   //////////////////////////////////////////////////////////////////////////////
   
   // FUNC //////////////////////////////////////////////////////////////////////
   // FN:UPDATE_ROLES ///////////////////////////////////////////////////////////
   updateRoles( users:Array<VerifiedUser> ) {
+    console.log(`// Updating roles for ${users.length} user(s) //`);
     // TODO Look up which of Rolebot's guilds the user is active in //////////// 
     // TODO Retrieve configs for the relevant guilds ///////////////////////////
     // TODO Query Subgraph to retrieve all relevant badges /////////////////////

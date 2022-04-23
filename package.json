@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "prod": "node dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "punch:invite": "node dist/punchcards/invite.js",
+    "punch:setup": "node dist/punchcards/setup.js",
+    "punch:fauthorize": "node dist/punchcards/fauthorize.js",
+    "punch:fauthorize:flo": "node dist/punchcards/fauthorize.js Flo",
+    "punch:unlink:flo": "node dist/punchcards/unlink.js Flo",
+    "punch:purge": "node dist/punchcards/purge.js"
   },
   "repository": {
     "type": "git",

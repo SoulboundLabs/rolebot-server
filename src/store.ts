@@ -1,10 +1,11 @@
 import { cert, initializeApp } from "firebase-admin/app";
-import { GOOGLE_CERT_JSON } from "./config";
+import { GOOGLE_CERT_JSON, ADDR_DB, CONF_DB } from "./config";
 import { Firestore, getFirestore, QuerySnapshot } from "firebase-admin/firestore";
+import { ServerConfig } from "./types";
 
 class ConnectionError extends Error {
   constructor() {
-    super("🔥 Not connected to the database");
+    super("✋ Not connected to the database");
     this.name = "ConnectionError";
   }
 }
@@ -20,11 +21,17 @@ export default class Store {
 
   async getVerifiedAccounts(): Promise<QuerySnapshot> {
     if (!this.db) throw new ConnectionError();
-    const snapshot = await this.db.collection('addresses').get();
-    // snapshot.forEach((doc) => {
+    const SNAPSHOT = await this.db.collection(ADDR_DB).get();
+    // SNAPSHOT.forEach((doc) => {
     //   console.log(doc.id, '=>', doc.data());
     // });
-    return snapshot;
+    return SNAPSHOT;
+  }
+
+  async getServerConfig( id: string ): Promise<ServerConfig | undefined> {
+    if (!this.db) throw new ConnectionError();
+    const DOC = await this.db.collection(CONF_DB).doc(id).get();
+    return DOC.data() as ServerConfig;
   }
 
   onUpdate( collection: string, callback: (snapshot: QuerySnapshot<FirebaseFirestore.DocumentData>) => void ) {

@@ -1,6 +1,7 @@
 .DS_Store
-node_modules
-/dist
+node_modules/
+dist/
+src/punchcards/mock.ts
 src/rolebot-45f4c-92dabed858fc.json
 
 # local env files

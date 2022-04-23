@@ -1,4 +1,5 @@
 import { CLIENT_OPTIONS, CLIENT_URL, VERIFY_URL, CMD_PREFIX } from "./config";
+import { TEST_SERVER_ID, DEFAULT_SERVER_CONFIG } from "./config";
 import { Commands, Palette } from "./config";
 import Discord, { 
   Client, 
@@ -13,19 +14,7 @@ import Discord, {
 import Messages from "./messages.json";
 import Store from "./store";
 import { QuerySnapshot } from "firebase-admin/firestore";
-
-interface ServerSettings {
-  enabled: boolean,
-  protocol: string;
-  networks: Array<string>;
-  roles: Array<string>;
-}
-
-interface VerifiedUser {
-  wallets: Array<string>,
-  discordID: string,
-  deleteMe: boolean
-}
+import { ServerConfig, Protocol, Role, VerifiedUser } from "./types";
 
 export default class Rolebot {
 
@@ -63,7 +52,8 @@ export default class Rolebot {
   // Fires whenever the bot joins a new server /////////////////////////////////
   async onGuildCreate( guild: Guild ) {
     console.log(`// 🤖 joined ${guild.name} (${guild.id}) //`);
-    // TODO Push a new, disabled ServerSettings entry to the DB ////////////////
+    // TODO Push a new, disabled ServerConfig entry to the DB ////////////////
+    // Find all users with admin privileges and send them a welcome message ////
   }
   // ON:MESSAGE_CREATE /////////////////////////////////////////////////////////
   async onMessageCreate( message: Message ) {
@@ -84,7 +74,7 @@ export default class Rolebot {
       case Commands.ShowServerConfig:
         // TODO Only show this information to Rolebot server admins ////////////
         // MAYBEDO Respond with a "Select Server" dropdown /////////////////////
-        this.sendServerConfig(message.author);
+        this.sendServerConfig(TEST_SERVER_ID, message.author);
         break;
       case Commands.MockWelcome:
         this.sendMockWelcomeMessage(message.author);
@@ -156,21 +146,34 @@ export default class Rolebot {
     user.send({ embeds: [EMBED], components: [ROW] });
   }
   // FN:SEND_SERVER_CONFIG ////////////////////////////////////////////////////
-  sendServerConfig( user: User ) {
-    const SETTINGS = JSON.stringify(this.retrieveServerSettings(), null, 2);
-    this.sendPrivateMessage(
-      user, 
-      Messages.config.title, 
-      Messages.config.description.replace(/\$CONFIG/ig, SETTINGS), 
-      Palette.Confidential
-    );
+  async sendServerConfig( id: string | undefined, user: User ) {
+    // TODO Make this work outside of DMs  ////////////////////////////////////
+    const CONFIG = await this.retrieveServerConfig(id);
+    if (CONFIG) {
+      const SETTINGS = JSON.stringify(CONFIG, null, 2);
+      this.sendPrivateMessage(
+        user, 
+        Messages.config.title, 
+        Messages.config.description.replace(/\$CONFIG/ig, SETTINGS), 
+        Palette.Confidential
+      );
+    } else {
+      this.sendPrivateMessage(
+        user, 
+        "Not Found", 
+        "There is no configuration matching your provided server ID",
+        Palette.Error
+      );
+    }
   }
   // FN:SEND_MOCK_WELCOME_MESSAGE //////////////////////////////////////////////
   sendMockWelcomeMessage( user: User ) {
-    const S = this.retrieveServerSettings();
-    const T = Messages.welcome.title.replace('$PROTOCOL', S.protocol);
-    const D = Messages.welcome.description.replace(/\$PROTOCOL/ig, S.protocol);
-    this.sendPrivateMessage(user, T, D);
+    const C = DEFAULT_SERVER_CONFIG;
+    for (const P of C.protocols) {
+      const T = Messages.welcome.title.replace('$PROTOCOL', P.name);
+      const D = Messages.welcome.description.replace(/\$PROTOCOL/ig, P.name);
+      this.sendPrivateMessage(user, T, D);
+    }
   }
   // FN:POST_WELCOME_MESSAGE ///////////////////////////////////////////////////
   postWelcomeMessage() {
@@ -178,14 +181,9 @@ export default class Rolebot {
     // TODO Post the message publicly in 'general' /////////////////////////////
   }
   // FN:RETRIEVE_SERVER_SETTINGS ///////////////////////////////////////////////
-  retrieveServerSettings( id?: string ): ServerSettings {
-    // TODO Make this function retrieve the actual settings ////////////////////
-    return {
-      enabled: true,
-      protocol: "The Graph",
-      networks: ["Subgraph 1", "Subgraph 2"],
-      roles: ["Delegator", "Indexer", "Curator", "Subgraph Dev"]
-    };
+  async retrieveServerConfig( id?: string ): Promise<ServerConfig | undefined> {
+    if (!id) return DEFAULT_SERVER_CONFIG as ServerConfig;
+    return await this.store.getServerConfig(id);
   }
   //////////////////////////////////////////////////////////////////////////////
 

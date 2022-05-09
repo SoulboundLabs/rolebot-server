@@ -161,12 +161,13 @@ export default class Rolebot {
 
           const REAPER = ReaperFactory.sendFor(P.id, U.wallets);
           const REAPED_SOULS = await REAPER.reap();
-
+          if (!REAPED_SOULS.length) continue;
           console.log("// 💀 Reaped souls for", USER.displayName, REAPED_SOULS );
+
+          // TODO Collect all roles to be assigned in one go /////////////////
           for (const S of REAPED_SOULS) {
             if (!P.roles.find(( role:Role ) => role.name === S.name)) continue;
-            // console.log(`// Role ${S.name} enabled in config`);
-            // TODO Collect all roles to be assigned in one go /////////////////
+            
             // Check if role already exists on server, if not, create it ///////
             if (!GUILD_ROLES.find(( role ) => role.name === S.name)) {
               const R = await GUILD.roles.create({ name: S.name });
@@ -176,8 +177,10 @@ export default class Rolebot {
               if (R) await USER.roles.add(R);
             }
           }
+
           // TODO Determine highest roles across wallets for user //////////////
           // TODO Remove roles that are no longer relevant /////////////////////
+          
           // Delete Addresses from DB where users indicated to do so ///////////
           if (U.deleteMe) {
             this.store.deleteUserData(U.wallets);

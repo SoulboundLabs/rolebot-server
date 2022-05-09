@@ -46,30 +46,30 @@ export const TEST_SERVER_ID = '814601441980710982';
 export const DEFAULT_TEST_SERVER_CONFIG = {
   enabled: false,
   protocols: [
-    {
-      id: "test",
-      name: "Flotocol",
-      networks: [],
-      roles: [
-        { id: "dank-memer", name: "Dank Memer" },
-        { id: "troll-lord", name: "Troll Lord" },
-        { id: "spam-blaster", name: "Spam Blaster" },
-        { id: 'moji-hype-juicer', name: "Moji-hype Juicer" },
-        { id: 'wall-flower', name: "Wall Flower" },
-        { id: "birthday-boy", name: "Birthday Boy" }
-      ]
-    },
     // {
-    //   id: 'the-graph',
-    //   name: 'The Graph',
-    //   networks: ['mainnet'],
+    //   id: "test",
+    //   name: "Flotocol",
+    //   networks: [],
     //   roles: [
-    //     { id: "INDEXER", name: "Indexer" },
-    //     { id: "CURATOR", name: "Curator" },
-    //     { id: "DELEGATOR", name: "Delegator" },
-    //     { id: "SUBGRAPH_DEVELOPER", name: "Subgraph Developer" }
+    //     { id: "dank-memer", name: "Dank Memer" },
+    //     { id: "troll-lord", name: "Troll Lord" },
+    //     { id: "spam-blaster", name: "Spam Blaster" },
+    //     { id: 'moji-hype-juicer', name: "Moji-hype Juicer" },
+    //     { id: 'wall-flower', name: "Wall Flower" },
+    //     { id: "birthday-boy", name: "Birthday Boy" }
     //   ]
-    // }
+    // },
+    {
+      id: 'the-graph',
+      name: 'The Graph',
+      networks: ['mainnet'],
+      roles: [
+        { id: "INDEXER", name: "Indexer" },
+        { id: "CURATOR", name: "Curator" },
+        { id: "DELEGATOR", name: "Delegator" },
+        { id: "SUBGRAPH_DEVELOPER", name: "Subgraph Developer" }
+      ]
+    }
   ]
 };
 export const DEFAULT_SERVER_CONFIG = {
@@ -96,24 +96,17 @@ export const THE_GRAPH_BADGES_QUERY = gql`
     earnedBadges(
       first: 5,
       orderBy: timestampAwarded,
-      orderDirection: desc
-      containsId: $wallets
+      orderDirection: desc,
+      where: { badgeWinner_in: $wallets }
     ) {
-      id
       badgeWinner {
         id
-        soulScore
-        roles {
-          protocolRole
-          soulScore
-        }
-      }
-      metadata {
-        name
-        value
       }
       definition {
         id
+        description
+        protocolRole
+        soulScore
       }
     }
   }

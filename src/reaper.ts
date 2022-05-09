@@ -32,6 +32,25 @@ class MockReaper implements Reaper {
 
 }
 
+interface Badge {
+  badgeWinner: {
+    id: string
+  },
+  definition: { 
+    id: string,
+    description: string,
+    protocolRole: string,
+    soulScore: number
+  }
+}
+
+const GRAPH_PROTOCOL_ROLES: { [key: string]: string } = {
+  INDEXER: "Indexer",
+  CURATOR: "Curator",
+  DELEGATOR: "Delegator",
+  SUBGRAPH_DEVELOPER: "Subgraph Developer"
+}
+
 class BadgeReaper implements Reaper {
 
   gql: GraphQLClient;
@@ -45,10 +64,10 @@ class BadgeReaper implements Reaper {
   }
 
   async reap(): Promise<Role[]> {
-    const RES = await this.gql.rawRequest(this.query, this.victim);
-    console.log(RES.data);
-    return RES.data.map(( badge: { id: string, metaData: { name: string } } ) => ({
-      id: badge.id, name: badge.metaData.name
+    const RES = await this.gql.rawRequest(this.query, { wallets: this.victim });
+    return RES.data.earnedBadges.map(( badge: Badge ) => ({
+      id: badge.definition.protocolRole, 
+      name: GRAPH_PROTOCOL_ROLES[badge.definition.protocolRole] || "???"
     } as Role));
   }
 

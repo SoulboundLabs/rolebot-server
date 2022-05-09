@@ -162,7 +162,7 @@ export default class Rolebot {
           const REAPER = ReaperFactory.sendFor(P.id, U.wallets);
           const REAPED_SOULS = await REAPER.reap();
 
-          console.log("// Reaped soul for", USER.displayName, REAPED_SOULS );
+          console.log("// 💀 Reaped souls for", USER.displayName, REAPED_SOULS );
           for (const S of REAPED_SOULS) {
             if (!P.roles.find(( role:Role ) => role.name === S.name)) continue;
             // console.log(`// Role ${S.name} enabled in config`);
@@ -177,9 +177,11 @@ export default class Rolebot {
             }
           }
           // TODO Determine highest roles across wallets for user //////////////
-          // TODO Iterate over users and assign roles according to server config
           // TODO Remove roles that are no longer relevant /////////////////////
-          // TODO Delete Addresses from DB where users indicated to do so //////
+          // Delete Addresses from DB where users indicated to do so ///////////
+          if (U.deleteMe) {
+            this.store.deleteUserData(U.wallets);
+          }
         }
       }
     });

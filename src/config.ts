@@ -59,6 +59,17 @@ export const DEFAULT_TEST_SERVER_CONFIG = {
         { id: "birthday-boy", name: "Birthday Boy" }
       ]
     },
+    // {
+    //   id: 'the-graph',
+    //   name: 'The Graph',
+    //   networks: ['mainnet'],
+    //   roles: [
+    //     { id: "INDEXER", name: "Indexer" },
+    //     { id: "CURATOR", name: "Curator" },
+    //     { id: "DELEGATOR", name: "Delegator" },
+    //     { id: "SUBGRAPH_DEVELOPER", name: "Subgraph Developer" }
+    //   ]
+    // }
   ]
 };
 export const DEFAULT_SERVER_CONFIG = {

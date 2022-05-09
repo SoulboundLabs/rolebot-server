@@ -1,7 +1,7 @@
 import { cert, initializeApp } from "firebase-admin/app";
 import { GOOGLE_CERT_JSON, ADDR_DB, CONF_DB } from "./config";
 import { Firestore, getFirestore, QuerySnapshot } from "firebase-admin/firestore";
-import { ServerConfig } from "./types";
+import { ServerConfig, VerifiedUser } from "./types";
 
 class ConnectionError extends Error {
   constructor() {
@@ -32,6 +32,13 @@ export default class Store {
     if (!this.db) throw new ConnectionError();
     const DOC = await this.db.collection(CONF_DB).doc(id).get();
     return DOC.data() as ServerConfig;
+  }
+
+  deleteUserData( wallets: Array<string> ): void {
+    if (!this.db) throw new ConnectionError();
+    for (const wallet of wallets) {
+      this.db.collection(ADDR_DB).doc(wallet).delete();
+    }
   }
 
   onUpdate( collection: string, callback: (snapshot: QuerySnapshot<FirebaseFirestore.DocumentData>) => void ) {

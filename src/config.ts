@@ -1,9 +1,11 @@
 import { ClientOptions, Intents } from "discord.js";
+import { gql } from "graphql-request";
 
 // Configuration options for Discord bot permissions ///////////////////////////
 export const CLIENT_OPTIONS: ClientOptions = { 
   intents: [
     Intents.FLAGS.GUILDS, 
+    Intents.FLAGS.GUILD_MEMBERS,
     Intents.FLAGS.GUILD_MESSAGES, 
     Intents.FLAGS.DIRECT_MESSAGES
   ], 
@@ -53,7 +55,8 @@ export const DEFAULT_TEST_SERVER_CONFIG = {
         { id: "troll-lord", name: "Troll Lord" },
         { id: "spam-blaster", name: "Spam Blaster" },
         { id: 'moji-hype-juicer', name: "Moji-hype Juicer" },
-        { id: 'wall-flower', name: "Wall Flower" }
+        { id: 'wall-flower', name: "Wall Flower" },
+        { id: "birthday-boy", name: "Birthday Boy" }
       ]
     },
   ]
@@ -62,15 +65,45 @@ export const DEFAULT_SERVER_CONFIG = {
   enabled: false,
   protocols: [
     {
-      id: 'thegraph',
+      id: 'the-graph',
       name: 'The Graph',
       networks: ['mainnet'],
       roles: [
-        { id: "indexer", name: "Indexer" },
-        { id: "curator", name: "Curator" },
-        { id: "delegator", name: "Delegator" },
-        { id: "subgraph_dev", name: "Subgraph Developer" }
+        { id: "INDEXER", name: "Indexer" },
+        { id: "CURATOR", name: "Curator" },
+        { id: "DELEGATOR", name: "Delegator" },
+        { id: "SUBGRAPH_DEVELOPER", name: "Subgraph Developer" }
       ]
     }
   ]
 };
+
+// Subgraphs ///////////////////////////////////////////////////////////////////
+export const THE_GRAPH_BADGES_URL = process.env.THE_GRAPH_BADGES_URL as string;
+export const THE_GRAPH_BADGES_QUERY = gql`
+  query AllEarnedBadges($wallets: [String]!) {
+    earnedBadges(
+      first: 5,
+      orderBy: timestampAwarded,
+      orderDirection: desc
+      containsId: $wallets
+    ) {
+      id
+      badgeWinner {
+        id
+        soulScore
+        roles {
+          protocolRole
+          soulScore
+        }
+      }
+      metadata {
+        name
+        value
+      }
+      definition {
+        id
+      }
+    }
+  }
+`;

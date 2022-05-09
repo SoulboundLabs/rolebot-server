@@ -14,7 +14,8 @@ import Discord, {
 import Messages from "./messages.json";
 import Store from "./store";
 import { QuerySnapshot } from "firebase-admin/firestore";
-import { ServerConfig, Protocol, Role, VerifiedUser } from "./types";
+import { ServerConfig, Protocol, Role, VerifiedUser, UpdateQueue } from "./types";
+import { ReaperFactory } from "./reaper";
 
 export default class Rolebot {
 
@@ -109,17 +110,80 @@ export default class Rolebot {
   //////////////////////////////////////////////////////////////////////////////
   
   // FUNC //////////////////////////////////////////////////////////////////////
+  // FN:FIND_MUTUAL_GUILDS /////////////////////////////////////////////////////
+  async findMutualGuilds( users: Array<VerifiedUser> ): Promise<UpdateQueue> {
+    let mutualGuilds:UpdateQueue = {};
+    // TODO Verify this actually always caches all the guilds in question //////
+    const RB_GUILDS = this.client.guilds.cache.map(( guild ) => guild.id);
+    for (const gid of RB_GUILDS) {
+      const GUILD = this.client.guilds.resolve(gid);
+      if (GUILD) {
+        const GUILD_MEMBERS = await GUILD.members.fetch();
+        for (const USER of users.values()) {
+          if (GUILD_MEMBERS.find(( member ) => member.id === USER.discordID)) {
+            if (!mutualGuilds.hasOwnProperty(GUILD.id)) {
+              mutualGuilds[GUILD.id] = [USER];
+            } else {
+              mutualGuilds[GUILD.id].push(USER);
+            }
+          }
+        }
+      } else {
+        // TODO Throw error about cached Guild no longer existing //////////////
+      }
+    }
+    return mutualGuilds;
+  }
   // FN:UPDATE_ROLES ///////////////////////////////////////////////////////////
-  updateRoles( users:Array<VerifiedUser> ) {
+  async updateRoles( users: Array<VerifiedUser> ) {
     console.log(`// Updating roles for ${users.length} user(s) //`);
-    // TODO Look up which of Rolebot's guilds the user is active in //////////// 
-    // TODO Retrieve configs for the relevant guilds ///////////////////////////
-    // TODO Query Subgraph to retrieve all relevant badges /////////////////////
-    // TODO Determine highest roles across wallets for every user //////////////
-    // TODO Iterate over users and assign roles according to server config /////
-    // TODO Remove roles that are no longer relevant ///////////////////////////
-    // TODO Delete Addresses from DB where users indicated to do so ////////////
-    // MAYBEDO Publish promotion either publicly or via DM /////////////////////
+
+    const MUTUAL_GUILDS = await this.findMutualGuilds(users);
+    // console.log("// Mutual guilds: ", MUTUAL_GUILDS);
+
+    // Retrieve configs for the relevant guilds ////////////////////////////////
+    const CONFIGS = new Map();
+    for (const GUILD in MUTUAL_GUILDS) {
+      if (!CONFIGS.has(GUILD))
+        CONFIGS.set(GUILD, await this.store.getServerConfig(GUILD));
+    }
+    CONFIGS.forEach(async ( config, guild, map ) => {
+      if (!config.enabled) return;
+      for (const P of config.protocols) {
+        for (const U of MUTUAL_GUILDS[guild]) {
+
+          const GUILD = this.client.guilds.cache.find(( g ) => g.id === guild); 
+          if (!GUILD) continue;
+          const GUILD_ROLES = await GUILD.roles.fetch();
+
+          const USER = await GUILD.members.fetch(U.discordID);
+          if (!USER) continue;
+
+          const REAPER = ReaperFactory.sendFor(P.id, U.wallets);
+          const REAPED_SOULS = await REAPER.reap();
+
+          console.log("// Reaped soul for", USER.displayName, REAPED_SOULS );
+          for (const S of REAPED_SOULS) {
+            if (!P.roles.find(( role:Role ) => role.name === S.name)) continue;
+            // console.log(`// Role ${S.name} enabled in config`);
+            // TODO Collect all roles to be assigned in one go /////////////////
+            // Check if role already exists on server, if not, create it ///////
+            if (!GUILD_ROLES.find(( role ) => role.name === S.name)) {
+              const R = await GUILD.roles.create({ name: S.name });
+              await USER.roles.add(R);
+            } else {
+              const R = GUILD_ROLES.find(( role ) => role.name === S.name);
+              if (R) await USER.roles.add(R);
+            }
+          }
+          // TODO Determine highest roles across wallets for user //////////////
+          // TODO Iterate over users and assign roles according to server config
+          // TODO Remove roles that are no longer relevant /////////////////////
+          // TODO Delete Addresses from DB where users indicated to do so //////
+        }
+      }
+    });
+
   }
   // FN:SEND_PRIVATE_MESSAGE ///////////////////////////////////////////////////
   sendPrivateMessage( to: User, title = "", desc = "", color?: Palette ) {
